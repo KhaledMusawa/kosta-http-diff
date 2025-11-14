@@ -18,7 +18,6 @@ public class KHttpDiff {
     private boolean notSame = false;
 
     public static void main(String[] args) {
-        System.out.println("khttpdiff starting...");
         new KHttpDiff().run(args);
     }
 
@@ -41,12 +40,15 @@ public class KHttpDiff {
         Set<String> excludeHeaders = parseExcludeHeaders(options.getOrDefault("ignore", ""));
         mono = options.containsKey("mono");
 
-        System.out.println("Comparing " + colorize(AnsiColor.YELLOW, method) + " requests:");
+        System.out.println(colorize(AnsiColor.YELLOW, "Comparing ") +
+                colorize(AnsiColor.MAGENTA, method) +
+                colorize(AnsiColor.YELLOW, " requests:"));
         System.out.println("    " + colorize(AnsiColor.RED, urls.get(0)));
         System.out.println("    " + colorize(AnsiColor.GREEN, urls.get(1)));
         System.out.println();
 
         System.out.println(colorize(AnsiColor.YELLOW, "Making requests..."));
+        System.out.println();
 
         CompletableFuture<HttpResponse<String>> future1 = makeHttpRequestAsync(urls.get(0));
         CompletableFuture<HttpResponse<String>> future2 = makeHttpRequestAsync(urls.get(1));
@@ -65,11 +67,6 @@ public class KHttpDiff {
             boolean hasSameHeaders = compareHeaders(result1, result2, excludeHeaders);
             boolean hasSameBodies = compareBodies(result1, result2);
 
-            if (hasSameStatusCodes && hasSameHeaders && hasSameBodies) {
-                System.out.println(colorize(AnsiColor.GREEN, "Requests are identical"));
-            } else {
-                System.out.println(colorize(AnsiColor.RED, "Requests are different"));
-            }
 
         } catch (Exception e) {
             System.err.println("Error getting results: " + e.getMessage());
@@ -137,7 +134,8 @@ public class KHttpDiff {
             return false;
         }
 
-        System.out.println(colorize(AnsiColor.GREEN, "Status codes identical: " + response1.statusCode()));
+        System.out.println(colorize(AnsiColor.YELLOW, "Status codes identical: ") +
+                colorize(AnsiColor.MAGENTA, String.valueOf(response1.statusCode())));
         return true;
     }
 
@@ -153,9 +151,18 @@ public class KHttpDiff {
                     List<String> values2 = response2.headers().map().get(header);
 
                     if (!values1.equals(values2)) {
-                        System.out.println("Different " + colorize(AnsiColor.GREEN, header) + " Headers:");
-                        System.out.println("    " + colorize(AnsiColor.RED, values1.toString()));
-                        System.out.println("    " + colorize(AnsiColor.GREEN, values2.toString()));
+                        System.out.println(colorize(AnsiColor.YELLOW, "Different ") +
+                                colorize(AnsiColor.CYAN, header) +
+                                colorize(AnsiColor.YELLOW, " Header:"));
+                        for (int i = 0; i < Integer.max(values1.size(), values2.size()); i++) {
+                            if (i < values1.size()) {
+                                System.out.println("    " + colorize(AnsiColor.RED, values1.get(i)));
+                            }
+                            if (i < values2.size()) {
+                                System.out.println("    " + colorize(AnsiColor.GREEN, values2.get(i)));
+                            }
+                            System.out.println();
+                        }
                         headersSame = false;
                         notSame = true;
                     }
@@ -169,6 +176,7 @@ public class KHttpDiff {
 
         if (headersSame) {
             System.out.println(colorize(AnsiColor.GREEN, " Headers identical"));
+            System.out.println();
         }
 
         return headersSame;
@@ -182,6 +190,7 @@ public class KHttpDiff {
                 if (!response2.headers().map().containsKey(header)) {
                     System.out.println("Header " + colorize(AnsiColor.GREEN, header) + " only in response:");
                     System.out.println("    " + colorize(color, response1.headers().map().get(header).toString()));
+                    System.out.println();
                     notSame = true;
                 }
             }
@@ -192,20 +201,20 @@ public class KHttpDiff {
 
     private boolean compareBodies(HttpResponse<String> response1, HttpResponse<String> response2) {
         if (response1.body().length() != response2.body().length()) {
-            System.out.println("Bodies are different");
-            System.out.println("    " + colorize(AnsiColor.RED, response1.body().length() + " Bytes"));
-            System.out.println("    " + colorize(AnsiColor.GREEN, response2.body()).length() + " Bytes");
+            System.out.println(colorize(AnsiColor.YELLOW, "Bodies are different (different length)"));
+            System.out.println("    " + colorize(AnsiColor.RED, response1.body().length() + " Length"));
+            System.out.println("    " + colorize(AnsiColor.GREEN, response2.body().length() + " Length"));
             notSame = true;
             return false;
         }
 
         if (!response1.body().equals(response2.body())) {
-            System.out.println("Bodies are different (same length, different content)");
+            System.out.println(colorize(AnsiColor.YELLOW, "Bodies are different (same length, different content)"));
             notSame = true;
             return false;
         }
 
-        System.out.println(colorize(AnsiColor.GREEN, "Bodies identical"));
+        System.out.println(colorize(AnsiColor.YELLOW, "Bodies identical"));
         return true;
     }
 
