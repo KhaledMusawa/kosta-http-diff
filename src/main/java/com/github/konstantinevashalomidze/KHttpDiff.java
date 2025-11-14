@@ -119,27 +119,22 @@ public class KHttpDiff {
     }
 
     private void printHelp() {
-        System.err.println("HttpDiff - Compare HTTP responses");
-        System.err.println("Usage: httpdiff [options] url1 url2");
-        System.err.println();
-        System.err.println("Options:");
-        System.err.println("  -method <method>    HTTP method (default: GET)");
-        System.err.println("  -body <data>        Request body for POST/PUT");
-        System.err.println("  -host <host>        Host header to send");
-        System.err.println("  -agent <ua>         User-Agent header (default: httpdiff/0.1)");
-        System.err.println("  -ignore <headers>   Comma-separated headers to ignore");
-        System.err.println("  -header <hdr>       Single header (Key: Value)");
-        System.err.println("  -headers <file>     File with headers (one per line)");
-        System.err.println("  -insecure           Allow insecure SSL connections");
-        System.err.println("  -diffapp <app>      Diff tool to use for body differences");
-        System.err.println("  -mono               Monochrome output");
-        System.err.println("  -help               Show this help");
-        System.err.println();
-        System.err.println("Examples:");
-        System.err.println("  httpdiff https://api1.example.com/v1/users https://api2.example.com/v1/users");
-        System.err.println("  httpdiff -method POST -body '{\"name\":\"test\"}' -header 'Content-Type: application/json' \\");
-        System.err.println("           https://api1.example.com/users https://api2.example.com/users");
-        System.err.println("  httpdiff -insecure -diffapp vimdiff https://localhost:8443/api https://localhost:9443/api");
+        System.out.println("HttpDiff - Compare HTTP responses");
+        System.out.println("Usage: httpdiff [options] url1 url2");
+        System.out.println();
+        System.out.println("Options:");
+        System.out.println("  -method <method>    HTTP method (default: GET)");
+        System.out.println("  -body <data>        Request body for POST/PUT");
+        System.out.println("  -host <host>        Host header to send");
+        System.out.println("  -agent <ua>         User-Agent header (default: httpdiff/0.1)");
+        System.out.println("  -ignore <headers>   Comma-separated headers to ignore");
+        System.out.println("  -header <hdr>       Single header (Key: Value)");
+        System.out.println("  -headers <file>     File with headers (one per line)");
+        System.out.println("  -insecure           Allow insecure SSL connections");
+        System.out.println("  -diffapp <app>      Diff tool to use for body differences");
+        System.out.println("  -mono               Monochrome output");
+        System.out.println("  -help               Show this help");
+        System.out.println();
     }
 
     private HttpClient createHttpClient(boolean insecure) {
