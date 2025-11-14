@@ -5,10 +5,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class KHttpDiff {
@@ -18,6 +15,7 @@ public class KHttpDiff {
     private static final String ANSI_COLOR_END = "m";
 
     private boolean mono = false;
+    private boolean notSame = false;
 
     public static void main(String[] args) {
         System.out.println("khttpdiff starting...");
@@ -26,6 +24,183 @@ public class KHttpDiff {
 
     private void run(String[] args) {
         Map<String, String> options = new HashMap<>();
+        List<String> urls = parseArguments(args, options);
+
+        if (options.containsKey("help") || urls.size() != 2) {
+            printHelp();
+            return;
+        }
+
+        if (!options.containsKey("method")) {
+            System.err.println(colorize(AnsiColor.RED, "Error: '-method' is required"));
+            printHelp();
+            return;
+        }
+
+        String method = options.get("method");
+        Set<String> excludeHeaders = parseExcludeHeaders(options.getOrDefault("ignore", ""));
+        mono = options.containsKey("mono");
+
+        System.out.println("Comparing " + colorize(AnsiColor.YELLOW, method) + " requests:");
+        System.out.println("    " + colorize(AnsiColor.RED, urls.get(0)));
+        System.out.println("    " + colorize(AnsiColor.GREEN, urls.get(1)));
+        System.out.println();
+
+        System.out.println(colorize(AnsiColor.YELLOW, "Making requests..."));
+
+        CompletableFuture<HttpResponse<String>> future1 = makeHttpRequestAsync(urls.get(0));
+        CompletableFuture<HttpResponse<String>> future2 = makeHttpRequestAsync(urls.get(1));
+
+
+        try {
+
+            HttpResponse<String> result1 = future1.get();
+            HttpResponse<String> result2 = future2.get();
+
+
+
+            boolean hasSameStatusCodes = compareStatusCodes(result1, result2);
+            boolean hasSameHeaders = compareHeaders(result1, result2, excludeHeaders);
+            boolean hasSameBodies = compareBodies(result1, result2);
+
+            if (hasSameStatusCodes && hasSameHeaders && hasSameBodies) {
+                System.out.println(colorize(AnsiColor.GREEN, "Requests are identical"));
+            } else {
+                System.out.println(colorize(AnsiColor.RED, "Requests are different"));
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error getting results: " + e.getMessage());
+        }
+
+
+    }
+
+    private Set<String> parseExcludeHeaders(String ignore) {
+        return Set.of(ignore.split(","));
+    }
+
+    private void printHelp() {
+        System.err.println(colorize(AnsiColor.RED, "Error: Exactly two URLs are required"));
+        System.err.println(colorize(AnsiColor.YELLOW, "Usage: khttpdiff [options] url1 url2"));
+    }
+
+    private CompletableFuture<HttpResponse<String>> makeHttpRequestAsync(String url) {
+        return CompletableFuture.supplyAsync(() -> {
+            try (HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build()) {
+
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .GET()
+                        .build();
+
+                return client.send(
+                        request,
+                        HttpResponse.BodyHandlers.ofString()
+                );
+
+            } catch (Exception e) {
+                return null;
+            }
+        });
+    }
+
+    private String colorize(AnsiColor color, String text) {
+        if (mono) {                     // color code
+            return String.format("%s: %s", color.getCode(), text);
+        }
+
+        String colorCode = ANSI_COLOR_START + color.getCode() + ANSI_COLOR_END;
+
+        return String.format("%s%s%s", colorCode, text, ANSI_RESET);
+    }
+
+    private boolean compareStatusCodes(HttpResponse<String> response1, HttpResponse<String> response2) {
+        if (response1.statusCode() != response2.statusCode()) {
+            System.out.println("Different status codes:");
+            System.out.println("    " + colorize(AnsiColor.RED, String.valueOf(response1.statusCode())));
+            System.out.println("    " + colorize(AnsiColor.GREEN, String.valueOf(response2.statusCode())));
+            notSame = true;
+            return false;
+        }
+
+        System.out.println(colorize(AnsiColor.GREEN, "Status codes identical: " + response1.statusCode()));
+        return true;
+    }
+
+    private boolean compareHeaders(HttpResponse<String> response1, HttpResponse<String> response2,
+                                   Set<String> excludeHeaders) {
+        boolean headersSame = true;
+
+        for (String header : response1.headers().map().keySet()) {
+            if (!excludeHeaders.contains(header)) { // Don't compare excluded headers
+                if (response2.headers().map().containsKey(header)) { // Header exists in both responses
+                    // Obtain header values from both responses
+                    List<String> values1 = response1.headers().map().get(header);
+                    List<String> values2 = response2.headers().map().get(header);
+
+                    if (!values1.equals(values2)) {
+                        System.out.println("Different " + colorize(AnsiColor.GREEN, header) + " Headers:");
+                        System.out.println("    " + colorize(AnsiColor.RED, values1.toString()));
+                        System.out.println("    " + colorize(AnsiColor.GREEN, values2.toString()));
+                        headersSame = false;
+                        notSame = true;
+                    }
+                }
+            }
+        }
+
+
+        findUniqueHeaders(response1, response2, excludeHeaders, AnsiColor.RED);
+        findUniqueHeaders(response2, response1, excludeHeaders, AnsiColor.GREEN);
+
+        if (headersSame) {
+            System.out.println(colorize(AnsiColor.GREEN, " Headers identical"));
+        }
+
+        return headersSame;
+
+    }
+
+    private void findUniqueHeaders(HttpResponse<String> response1, HttpResponse<String> response2,
+                                   Set<String> excludeHeaders, AnsiColor color) {
+        for (String header : response1.headers().map().keySet()) {
+            if (!excludeHeaders.contains(header)) {
+                if (!response2.headers().map().containsKey(header)) {
+                    System.out.println("Header " + colorize(AnsiColor.GREEN, header) + " only in response:");
+                    System.out.println("    " + colorize(color, response1.headers().map().get(header).toString()));
+                    notSame = true;
+                }
+            }
+        }
+    }
+
+
+
+    private boolean compareBodies(HttpResponse<String> response1, HttpResponse<String> response2) {
+        if (response1.body().length() != response2.body().length()) {
+            System.out.println("Bodies are different");
+            System.out.println("    " + colorize(AnsiColor.RED, response1.body().length() + " Bytes"));
+            System.out.println("    " + colorize(AnsiColor.GREEN, response2.body()).length() + " Bytes");
+            notSame = true;
+            return false;
+        }
+
+        if (!response1.body().equals(response2.body())) {
+            System.out.println("Bodies are different (same length, different content)");
+            notSame = true;
+            return false;
+        }
+
+        System.out.println(colorize(AnsiColor.GREEN, "Bodies identical"));
+        return true;
+    }
+
+
+
+    private List<String> parseArguments(String[] args, Map<String, String> options) {
         List<String> urls = new ArrayList<>();
 
         for (int i = 0; i < args.length; i++) {
@@ -41,82 +216,9 @@ public class KHttpDiff {
             }
         }
 
-        if (urls.size() != 2) {
-            System.err.println("Error: Exactly two URLs are required");
-            System.err.println("Usage: khttpdiff [options] url1 url2");
-            System.exit(2);
-        }
-
-        System.out.println("Options: " + options);
-        System.out.println("Urls: " + urls);
-
-        System.out.println("Making requests...");
-
-        CompletableFuture<String> future1 = makeHttpRequestAsync(urls.get(0));
-        CompletableFuture<String> future2 = makeHttpRequestAsync(urls.get(1));
-
-
-        try {
-
-            String result1 = future1.get();
-            String result2 = future2.get();
-
-            boolean isSame = compareResponses(result1, result2);
-
-        } catch (Exception e) {
-            System.err.println("Error getting results: " + e.getMessage());
-        }
-
-
+        return urls;
     }
 
-    private CompletableFuture<String> makeHttpRequestAsync(String url) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                HttpClient client = HttpClient.newBuilder()
-                        .connectTimeout(Duration.ofSeconds(10))
-                        .build();
-
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(url))
-                        .GET()
-                        .build();
-
-                HttpResponse<String> response = client.send(
-                        request,
-                        HttpResponse.BodyHandlers.ofString()
-                );
-
-                return String.format("Status: %d\nBody length: %d", response.statusCode(), response.body().length());
-
-            } catch (Exception e) {
-                return "Error: " + e.getMessage();
-            }
-        });
-    }
-
-    private boolean compareResponses(String result1, String result2) {
-        boolean isSame = result1.equals(result2);
-        if (isSame) {
-            System.out.println("Responses are identical");
-        } else {
-            System.out.println("Responses are different");
-            System.out.println("    " + colorize(AnsiColor.RED, result1));
-            System.out.println("    " + colorize(AnsiColor.GREEN, result2));
-        }
-
-        return isSame;
-    }
-
-    private String colorize(AnsiColor color, String text) {
-        if (mono) {                     // color code
-            return String.format("%s: %s", color.getCode(), text);
-        }
-
-        String colorCode = ANSI_COLOR_START + color.getCode() + ANSI_COLOR_END;
-
-        return String.format("%s%s%s", colorCode, text, ANSI_RESET);
-    }
 
     enum AnsiColor {
         RED(1),
@@ -137,5 +239,6 @@ public class KHttpDiff {
             return String.valueOf(code);
         }
     }
+
 
 }
