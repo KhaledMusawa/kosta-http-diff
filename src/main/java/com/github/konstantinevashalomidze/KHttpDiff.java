@@ -57,7 +57,9 @@ public class KHttpDiff {
             HttpResponse<String> result1 = future1.get();
             HttpResponse<String> result2 = future2.get();
 
-
+            if (result1 == null || result2 == null) {
+                return;
+            }
 
             boolean hasSameStatusCodes = compareStatusCodes(result1, result2);
             boolean hasSameHeaders = compareHeaders(result1, result2, excludeHeaders);
@@ -81,8 +83,15 @@ public class KHttpDiff {
     }
 
     private void printHelp() {
-        System.err.println(colorize(AnsiColor.RED, "Error: Exactly two URLs are required"));
-        System.err.println(colorize(AnsiColor.YELLOW, "Usage: khttpdiff [options] url1 url2"));
+        System.out.println(colorize(AnsiColor.YELLOW, "khttpdiff - Compare HTTP requests"));
+        System.out.println(colorize(AnsiColor.YELLOW, "Usage: khttpdiff [options] url1 url2"));
+        System.out.println();
+        System.out.println(colorize(AnsiColor.YELLOW, "Options:"));
+        System.out.println(colorize(AnsiColor.YELLOW, "    -method <method>       *HTTP method to use (GET, POST, PUT, DELETE)"));
+        System.out.println(colorize(AnsiColor.YELLOW, "    -ignore <header>        Comma-separated list of headers to ignore"));
+        System.out.println(colorize(AnsiColor.YELLOW, "    -mono                   Monochrome output"));
+        System.out.println(colorize(AnsiColor.YELLOW, "    -help                   Show this help message"));
+
     }
 
     private CompletableFuture<HttpResponse<String>> makeHttpRequestAsync(String url) {
@@ -102,6 +111,8 @@ public class KHttpDiff {
                 );
 
             } catch (Exception e) {
+                System.out.println(colorize(AnsiColor.YELLOW, "Something went wrong during request "
+                        + url + " possible reason " + e.getMessage()));
                 return null;
             }
         });
