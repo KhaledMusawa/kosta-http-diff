@@ -235,7 +235,7 @@ public class KHttpDiff {
 
     private boolean compareStatusCodes(HttpResponse<String> response1, HttpResponse<String> response2) {
         if (response1.statusCode() != response2.statusCode()) {
-            System.out.println("Different status codes:");
+            System.out.println(colorize(AnsiColor.YELLOW, "Different status codes:"));
             System.out.println("    " + colorize(AnsiColor.RED, String.valueOf(response1.statusCode())));
             System.out.println("    " + colorize(AnsiColor.GREEN, String.valueOf(response2.statusCode())));
             System.out.println();
@@ -358,7 +358,7 @@ public class KHttpDiff {
 
             // if diff app is specified run it
             if (diffApp != null && !diffApp.isEmpty()) {
-                System.out.println(colorize(AnsiColor.YELLOW, "Running diff tool:" + diffApp));
+                System.out.println(colorize(AnsiColor.YELLOW, "Running diff tool:") + colorize(AnsiColor.MAGENTA, diffApp));
                 System.out.println();
                 Process process = new ProcessBuilder(
                         diffApp,
