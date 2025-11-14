@@ -1,5 +1,10 @@
 package com.github.konstantinevashalomidze;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,11 +40,43 @@ public class KHttpDiff {
             System.exit(2);
         }
 
-
         System.out.println("Options: " + options);
         System.out.println("Urls: " + urls);
+
+        System.out.println("Making requests...");
+
+        String result1 = makeHttpRequest(urls.get(0));
+        String result2 = makeHttpRequest(urls.get(1));
+
+        System.out.println("Response 1: " + result1);
+        System.out.println("Response 2: " + result2);
+
     }
 
+
+
+    private String makeHttpRequest(String url) {
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = client.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            return String.format("Status: %d\nBody length: %d", response.statusCode(), response.body().length());
+
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
+    }
 
 
 }
